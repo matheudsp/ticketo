@@ -1,0 +1,15 @@
+{
+  "name": "ticketo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "pnpm run --parallel dev",
+    "build": "pnpm run --parallel build",
+    "build:all":"pnpm -r build",
+    "start": "node apps/server/dist/main"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
