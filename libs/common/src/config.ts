@@ -4,28 +4,59 @@ import { join } from 'path';
 const envPath = join(__dirname, '../../../.env'); // Caminho relativo para o .env na raiz
 dotenv.config({ path: envPath });
 
+console.log('.ENV imported from ' + envPath)
+
 export const config = {
-    server: {
-        host: process.env.HOST || 'localhost', // Valor padrão caso não exista no .env
-        port: Number(process.env.PORT) || 3000,
-        baseUrl: process.env.BASE_URL || 'http://localhost:3000',
+  // REST API ONLY
+  server: {
+    host: process.env.HOST,
+    port: Number(process.env.PORT),
+    baseUrl: process.env.BASE_URL,
+  },
+  security: {
+    accessTokenKey: process.env.ACCESS_TOKEN_KEY,
+    refreshTokenKey: process.env.REFRESH_TOKEN_KEY,
+    accessTokenExpiration: process.env.ACCESS_TOKEN_EXPIRATION,
+    refreshTokenExpiration: process.env.REFRESH_TOKEN_EXPIRATION,
+    refreshTokenTTL: Number(
+      process.env.REFRESH_TOKEN_TTL ?? 60 * 60 * 24 * 30 * 1000,
+    ),
+    bcryptSaltOrRound: 10,
+    otpTTL: Number(process.env.OTP_TTL ?? 300 * 1000),
+    otpPrefix: 'otp-',
+    google: {
+      clientID: process.env.SERVER_GOOGLE_CLIENT_ID,
+      clientSecret: process.env.SERVER_GOOGLE_CLIENT_SECRET,
+      webClientID: process.env.WEB_APP_GOOGLE_CLIENT_ID,
+      webClientSecret: process.env.WEB_APP_GOOGLE_CLIENT_SECRET,
+      callbackURL: `${process.env.BASE_URL}api/auth/google/callback`,
     },
-    // ... outras configurações
-    security: {
-      accessTokenKey: process.env.ACCESS_TOKEN_KEY || "ACCESS_TOKEN_KEY",
-      refreshTokenKey: process.env.REFRESH_TOKEN_KEY || "REFRESH_TOKEN_KEY",
-      accessTokenExpiration: process.env.ACCESS_TOKEN_EXPIRATION || "1h",
-      refreshTokenExpiration: process.env.REFRESH_TOKEN_EXPIRATION || "7d",
-    },
-    redis: {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: Number(process.env.REDIS_PORT) || 6379,
-    },
-    smtp: {
-      host: process.env.MAIL_HOST || 'sandbox.smtp.mailtrap.io',
-      port: Number(process.env.MAIL_PORT) || 2525,
-      address: process.env.MAIL_ADDRESS || "example@example.com",
-      password: process.env.MAIL_PASSWORD || "password",
-      from: process.env.MAIL_FROM || "example@example.com",
-    },
-};
+  },
+  redis: {
+    host: process.env.REDIS_HOST,
+    port: Number(process.env.REDIS_PORT),
+  },
+  smtp: {
+    host: process.env.MAIL_HOST,
+    port: process.env.MAIL_PORT,
+    address: process.env.MAIL_ADDRESS,
+    password: process.env.MAIL_PASSWORD,
+    from: process.env.MAIL_FROM,
+  },
+  storage: {
+    uploadsPath: 'uploads',
+    eventImagePath: 'uploads/events',
+    ticketImagePath: 'uploads/tickets',
+    userImagePath: 'uploads/users',
+  },
+  fileStream: {
+    baseUrl: process.env.STORAGE_BASE_URL ?? `${process.env.BASE_URL}file/`,
+    eventImageUrlPath: 'events',
+    ticketImageUrlPath: 'tickets',
+    userImageUrlPath: 'users',
+  },
+  payment: {
+    url: process.env.MIDTRANS_URL,
+    authString: process.env.MIDTRANS_SERVER_KEY,
+  },
+}

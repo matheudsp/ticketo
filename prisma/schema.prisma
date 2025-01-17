@@ -1,0 +1,160 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  
+}
+
+model User {
+  id       String  @id @default(uuid())
+  userName String  @unique
+  fullName String
+  email    String  @unique
+  password String
+  image    String?
+  
+  groups UserGroup[] @default([USER])
+
+  events            Event[]            @relation("OrganizerEvents")
+  purchases         Purchase[]
+  notifications     Notification[]
+  notificationReads NotificationRead[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+enum UserGroup {
+  SUPERADMIN
+  ADMIN
+  USER
+}
+
+model Event {
+  id                String                               @id @default(uuid())
+  organizerId       String
+  name              String
+  description       String
+  date              DateTime
+  endDate           DateTime?
+  location          String?
+  latitude          Float?
+  longitude         Float?
+  
+  categories        String[]
+  images            EventImage[]
+  status            EventStatus                          @default(DRAFT)
+
+  tickets Ticket[]
+
+  organizer User       @relation("OrganizerEvents", fields: [organizerId], references: [id])
+  purchases Purchase[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+model EventImage {
+  id       Int     @id @default(autoincrement())
+  eventId  String
+  imageUrl String
+  altText  String?
+
+  event Event @relation(fields: [eventId], references: [id])
+}
+
+model Ticket {
+  id             String    @id @default(uuid())
+  eventId        String
+  name           String // Ex: "Pista", "VIP"
+  price          Float
+  stock          Int
+  availableStock Int // Stock disponível para venda (stock - ingressos vendidos)
+  salesStartDate DateTime?
+  salesEndDate   DateTime?
+
+  event     Event      @relation(fields: [eventId], references: [id])
+  purchases Purchase[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Purchase {
+  id        String         @id @default(uuid())
+  ticketId  String
+  userId    String
+  eventId   String
+  orderId   String// ID do pedido no gateway de pagamento
+  price     Float
+  status    PurchaseStatus @default(PENDING)
+  qrCode    String // Armazena o QR Code gerado para o ingresso
+  scannedAt DateTime? // Data e hora da leitura do ingresso na entrada
+  exitAt    DateTime? // Data e hora da leitura do ingresso na saída
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  event  Event  @relation(fields: [eventId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+model Notification {
+  id         Int                     @id @default(autoincrement())
+  userId     String? // Pode ser null para notificações globais
+  message    String
+  type       NotificationType
+  entityType NotificationEntityType?
+  entityId   String?
+  readBy     NotificationRead[]
+
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum NotificationType {
+  EVENT_CREATED
+  TICKET_PURCHASED
+  EVENT_CANCELLED
+  REFUND_ISSUED
+  OTHER
+}
+
+enum NotificationEntityType {
+  EVENT
+  TICKET
+  PURCHASE
+}
+
+model NotificationRead {
+  id             Int       @id @default(autoincrement())
+  userId         String
+  notificationId Int
+  readAt         DateTime?
+
+  user         User         @relation(fields: [userId], references: [id])
+  notification Notification @relation(fields: [notificationId], references: [id])
+
+  @@unique([userId, notificationId])
+}
